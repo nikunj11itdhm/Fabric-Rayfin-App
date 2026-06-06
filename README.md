@@ -106,8 +106,8 @@ npm --version    # Should show v9.x or higher
 ### Step 2: Clone the Repository
 
 ```bash
-git clone https://github.com/nikunj11itdhm/DemoApp.git
-cd DemoApp
+git clone https://github.com/nikunj11itdhm/Fabric-Rayfin-App.git
+cd Fabric-Rayfin-App
 ```
 
 ### Step 3: Install Dependencies
