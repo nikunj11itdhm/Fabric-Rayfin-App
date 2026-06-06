@@ -8,7 +8,8 @@
     "composite": true,
     "noEmit": false,
     "module": "nodenext",
-    "moduleResolution": "nodenext"
+    "moduleResolution": "nodenext",
+    "skipLibCheck": true
   },
   "include": [
     "**/*"
