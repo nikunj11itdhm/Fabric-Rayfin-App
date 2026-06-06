@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DemoApp - Lakehouse Analytics</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; color: #1a1a2e; }
+    .header { background: linear-gradient(135deg, #0078d4, #005a9e); color: white; padding: 24px 32px; }
+    .header h1 { font-size: 1.5rem; font-weight: 600; }
+    .header p { opacity: 0.85; margin-top: 4px; font-size: 0.9rem; }
+    .tabs { display: flex; gap: 0; background: #fff; border-bottom: 2px solid #e0e0e0; padding: 0 32px; }
+    .tab { padding: 12px 24px; cursor: pointer; font-size: 0.9rem; font-weight: 500; color: #666; border-bottom: 3px solid transparent; transition: all 0.2s; }
+    .tab:hover { color: #0078d4; background: #f0f7ff; }
+    .tab.active { color: #0078d4; border-bottom-color: #0078d4; font-weight: 600; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .dashboard { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .kpi-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .kpi-card .label { font-size: 0.8rem; text-transform: uppercase; color: #666; letter-spacing: 0.5px; }
+    .kpi-card .value { font-size: 1.8rem; font-weight: 700; color: #0078d4; margin-top: 4px; }
+    .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .chart-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .chart-card h3 { font-size: 1rem; margin-bottom: 16px; color: #333; }
+    .table-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .table-card h3 { margin-bottom: 16px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #eee; }
+    th { background: #f8f9fa; font-weight: 600; color: #555; }
+    tr:hover td { background: #f0f7ff; }
+    .status-badge { padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 500; }
+    .status-completed { background: #d4edda; color: #155724; }
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-shipped { background: #cce5ff; color: #004085; }
+    .loading { text-align: center; padding: 60px; color: #666; }
+    .slicer-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; background: white; border-radius: 12px; padding: 14px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px; }
+    .slicer-bar label { font-size: 0.78rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.3px; }
+    .slicer-bar select, .slicer-bar input[type="month"] { padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.82rem; background: #f8f9fa; color: #333; cursor: pointer; min-width: 130px; }
+    .slicer-bar select:focus, .slicer-bar input[type="month"]:focus { outline: none; border-color: #0078d4; box-shadow: 0 0 0 2px rgba(0,120,212,0.15); }
+    .slicer-group { display: flex; flex-direction: column; gap: 4px; }
+    .slicer-bar .reset-btn { padding: 6px 14px; border: none; background: #e74856; color: white; border-radius: 6px; font-size: 0.78rem; cursor: pointer; font-weight: 500; }
+    .slicer-bar .reset-btn:hover { background: #c63440; }
+    .map-container { position: relative; background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin: 24px auto; max-width: 1200px; }
+    .map-container h3 { font-size: 1rem; margin-bottom: 16px; color: #333; }
+    @media (max-width: 600px) { .chart-grid { grid-template-columns: 1fr; } .slicer-bar { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📊 Lakehouse Analytics Dashboard</h1>
+    <p>FabricOnelake_Pvt Workspace — Real-time data from your Fabric Data App</p>
+  </div>
+  <div class="tabs">
+    <div class="tab active" data-tab="analytics">📈 Analytics</div>
+    <div class="tab" data-tab="india-map">🗺️ India Map</div>
+  </div>
+  <div id="tab-analytics" class="tab-content active">
+  <div class="dashboard">
+    <div class="slicer-bar" id="analytics-slicers">
+      <div class="slicer-group">
+        <label>Category</label>
+        <select id="slicer-category"><option value="">All Categories</option></select>
+      </div>
+      <div class="slicer-group">
+        <label>Region</label>
+        <select id="slicer-region"><option value="">All Regions</option></select>
+      </div>
+      <div class="slicer-group">
+        <label>Status</label>
+        <select id="slicer-status"><option value="">All Statuses</option></select>
+      </div>
+      <div class="slicer-group">
+        <label>From</label>
+        <input type="month" id="slicer-date-from" />
+      </div>
+      <div class="slicer-group">
+        <label>To</label>
+        <input type="month" id="slicer-date-to" />
+      </div>
+      <div class="slicer-group" style="justify-content:flex-end;">
+        <label>&nbsp;</label>
+        <button class="reset-btn" id="slicer-reset">Reset All</button>
+      </div>
+    </div>
+    <div class="kpi-row" id="kpi-row">
+      <div class="kpi-card"><div class="label">Loading...</div><div class="value">—</div></div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Revenue by Product Category</h3>
+        <canvas id="categoryChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Orders Over Time</h3>
+        <canvas id="timeChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Sales by Region</h3>
+        <canvas id="regionChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Order Status Distribution</h3>
+        <canvas id="statusChart"></canvas>
+      </div>
+    </div>
+    <div class="table-card">
+      <h3>Recent Orders</h3>
+      <table>
+        <thead><tr><th>Order Date</th><th>Product</th><th>Customer</th><th>Region</th><th>Amount</th><th>Status</th></tr></thead>
+        <tbody id="orders-table"><tr><td colspan="6" class="loading">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  </div>
+  <div id="tab-india-map" class="tab-content">
+    <div class="dashboard">
+      <div class="slicer-bar" id="map-slicers">
+        <div class="slicer-group">
+          <label>Metric</label>
+          <select id="slicer-map-metric">
+            <option value="population">Population Index</option>
+            <option value="revenue">Revenue</option>
+            <option value="orders">Order Count</option>
+            <option value="growth">Growth %</option>
+          </select>
+        </div>
+        <div class="slicer-group">
+          <label>Zone</label>
+          <select id="slicer-map-zone">
+            <option value="">All Zones</option>
+            <option value="north">North</option>
+            <option value="south">South</option>
+            <option value="east">East</option>
+            <option value="west">West</option>
+            <option value="central">Central</option>
+            <option value="northeast">North East</option>
+          </select>
+        </div>
+      </div>
+      <div class="map-container">
+        <h3>🗺️ India — State-wise Data Visualization</h3>
+        <div id="india-map-container" style="width:100%; min-height:600px;"></div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
